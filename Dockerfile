@@ -1,4 +1,4 @@
-FROM alpine:v3.24.0
+FROM alpine:3.24.1
 
 # Copy entrypoint script into the image
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
