@@ -8,8 +8,8 @@
     {
       "matchDatasources": ["repology"],
       "separateMultipleMajor": false,
-      "groupName": "package updates",
-      "commitMessageSuffix": "\\n\\n{{#each upgrades}}{{depName}}:\\t{{currentValue}} => {{newValue}}\\n{{\/each}}"
+      "groupName": "alpine packages",
+      "commitBodyTable": true
     }
   ],
   "customManagers": [
