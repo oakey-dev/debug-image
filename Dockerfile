@@ -1,5 +1,8 @@
 FROM alpine:3.24.1
 
+# Add this label to your Dockerfile
+LABEL org.opencontainers.image.source=https://github.com/oakey-dev/debug-image
+
 # Copy entrypoint script into the image
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
