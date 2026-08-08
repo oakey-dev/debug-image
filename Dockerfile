@@ -4,19 +4,19 @@ FROM alpine:3.24.1
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # renovate: datasource=repology depName=alpine_3_24/atop versioning=apk
-ENV ATOP_VERSION="2.0.0"
+ENV ATOP_VERSION="2.12.1"
 # renovate: datasource=repology depName=alpine_3_24/bind-tools versioning=apk
-ENV BIND_TOOLS_VERSION="9.0.0"
+ENV BIND_TOOLS_VERSION="9.20.26"
 # renovate: datasource=repology depName=alpine_3_24/ca-certificates versioning=apk
 ENV CA_CERTIFICATES_VERSION="20260611"
 # renovate: datasource=repology depName=alpine_3_24/curl versioning=apk
-ENV CURL_VERSION="8.0.0"
+ENV CURL_VERSION="8.21.0"
 # renovate: datasource=repology depName=alpine_3_24/iftop versioning=apk
 ENV IFTOP_VERSION="1.0_pre4-r0"
 # renovate: datasource=repology depName=alpine_3_24/inxi versioning=apk
-ENV INXI_VERSION="3.0.0"
+ENV INXI_VERSION="3.3.39.1"
 # renovate: datasource=repology depName=alpine_3_24/iperf3 versioning=apk
-ENV IPERF3_VERSION="3.0.0"
+ENV IPERF3_VERSION="3.20"
 # renovate: datasource=repology depName=alpine_3_24/iproute2 versioning=apk
 ENV IPROUTE2_VERSION="7.0.0"
 # renovate: datasource=repology depName=alpine_3_24/iputils versioning=apk
@@ -24,15 +24,15 @@ ENV IPUTILS_VERSION="20250605"
 # renovate: datasource=repology depName=alpine_3_24/less versioning=apk
 ENV LESS_VERSION="702"
 # renovate: datasource=repology depName=alpine_3_24/grml-zsh-config versioning=apk
-ENV GRML_ZSH_CONFIG_VERSION="0.0.0"
+ENV GRML_ZSH_CONFIG_VERSION="0.19.10"
 # renovate: datasource=repology depName=alpine_3_24/htop versioning=apk
 ENV HTOP_VERSION="3.5.1"
 # renovate: datasource=repology depName=alpine_3_24/mtr versioning=apk
-ENV MTR_VERSION="0.0.0"
+ENV MTR_VERSION="0.96"
 # renovate: datasource=repology depName=alpine_3_24/man-pages versioning=apk
 ENV MAN_PAGES_VERSION="6.18"
 # renovate: datasource=repology depName=alpine_3_24/neovim versioning=apk
-ENV NEOVIM_VERSION="0.0.0"
+ENV NEOVIM_VERSION="0.12.2"
 # renovate: datasource=repology depName=alpine_3_24/nmap versioning=apk
 ENV NMAP_VERSION="7.99"
 # renovate: datasource=repology depName=alpine_3_24/python3 versioning=apk
