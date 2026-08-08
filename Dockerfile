@@ -8,7 +8,7 @@ ENV ATOP_VERSION="2.0.0"
 # renovate: datasource=repology depName=alpine_3_24/bind-tools versioning=apk
 ENV BIND_TOOLS_VERSION="9.0.0"
 # renovate: datasource=repology depName=alpine_3_24/ca-certificates versioning=apk
-ENV CA_CERTIFICATES_VERSION="0.0.0"
+ENV CA_CERTIFICATES_VERSION="20260611"
 # renovate: datasource=repology depName=alpine_3_24/curl versioning=apk
 ENV CURL_VERSION="8.0.0"
 # renovate: datasource=repology depName=alpine_3_24/iftop versioning=apk
@@ -20,37 +20,37 @@ ENV IPERF3_VERSION="3.0.0"
 # renovate: datasource=repology depName=alpine_3_24/iproute2 versioning=apk
 ENV IPROUTE2_VERSION="7.0.0"
 # renovate: datasource=repology depName=alpine_3_24/iputils versioning=apk
-ENV IPUTILS_VERSION="0.0.0"
+ENV IPUTILS_VERSION="20250605"
 # renovate: datasource=repology depName=alpine_3_24/less versioning=apk
-ENV LESS_VERSION="0.0.0"
+ENV LESS_VERSION="702"
 # renovate: datasource=repology depName=alpine_3_24/grml-zsh-config versioning=apk
 ENV GRML_ZSH_CONFIG_VERSION="0.0.0"
 # renovate: datasource=repology depName=alpine_3_24/htop versioning=apk
-ENV HTOP_VERSION="0.0.0"
+ENV HTOP_VERSION="3.5.1"
 # renovate: datasource=repology depName=alpine_3_24/mtr versioning=apk
 ENV MTR_VERSION="0.0.0"
 # renovate: datasource=repology depName=alpine_3_24/man-pages versioning=apk
-ENV MAN_PAGES_VERSION="0.0.0"
+ENV MAN_PAGES_VERSION="6.18"
 # renovate: datasource=repology depName=alpine_3_24/neovim versioning=apk
 ENV NEOVIM_VERSION="0.0.0"
 # renovate: datasource=repology depName=alpine_3_24/nmap versioning=apk
-ENV NMAP_VERSION="0.0.0"
+ENV NMAP_VERSION="7.99"
 # renovate: datasource=repology depName=alpine_3_24/python3 versioning=apk
-ENV PYTHON3_VERSION="0.0.0"
+ENV PYTHON3_VERSION="3.14.5"
 # renovate: datasource=repology depName=alpine_3_24/pstree versioning=apk
-ENV PSTREE_VERSION="0.0.0"
+ENV PSTREE_VERSION="2.40"
 # renovate: datasource=repology depName=alpine_3_24/tcpdump versioning=apk
-ENV TCPDUMP_VERSION="0.0.0"
+ENV TCPDUMP_VERSION="4.99.6"
 # renovate: datasource=repology depName=alpine_3_24/tmux versioning=apk
-ENV TMUX_VERSION="0.0.0"
+ENV TMUX_VERSION="3.6b"
 # renovate: datasource=repology depName=alpine_3_24/tree versioning=apk
-ENV TREE_VERSION="0.0.0"
+ENV TREE_VERSION="2.3.2"
 # renovate: datasource=repology depName=alpine_3_24/vnstat versioning=apk
-ENV VNSTAT_VERSION="0.0.0"
+ENV VNSTAT_VERSION="2.13"
 # renovate: datasource=repology depName=alpine_3_24/wget versioning=apk
-ENV WGET_VERSION="0.0.0"
+ENV WGET_VERSION="1.25.0"
 # renovate: datasource=repology depName=alpine_3_24/zsh versioning=apk
-ENV ZSH_VERSION="0.0.0"
+ENV ZSH_VERSION="5.9"
 
 RUN apk update && apk add --no-cache \
     "atop=${ATOP_VERSION}" \
