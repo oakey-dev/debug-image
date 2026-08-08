@@ -1,8 +1,0 @@
-build:
-  image: docker:cli
-  services:
-    - name: docker:dind
-      alias: docker
-  stage: build
-  script:
-    - docker build -t debug .
