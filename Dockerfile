@@ -38,6 +38,8 @@ ENV IPERF3_VERSION="3.20-r0"
 ENV IPROUTE2_VERSION="7.0.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/iputils versioning=loose
 ENV IPUTILS_VERSION="20250605-r2"
+# renovate: datasource=repology depName=alpine_3_24/jq versioning=loose
+ENV JQ_VERSION="1.8.1-r0"
 # renovate: datasource=repology depName=alpine_3_24/less versioning=loose
 ENV LESS_VERSION="702-r0"
 # renovate: datasource=repology depName=alpine_3_24/mtr versioning=loose
@@ -64,6 +66,8 @@ ENV TREE_VERSION="2.3.2-r0"
 ENV VNSTAT_VERSION="2.13-r1"
 # renovate: datasource=repology depName=alpine_3_24/wget versioning=loose
 ENV WGET_VERSION="1.25.0-r3"
+# renovate: datasource=repology depName=alpine_3_24/yq-go versioning=loose
+ENV YQ_GO_VERSION="4.53.3-r0"
 # renovate: datasource=repology depName=alpine_3_24/zsh versioning=loose
 ENV ZSH_VERSION="5.9-r7"
 # renovate: datasource=repology depName=alpine_3_24/zsh-completions versioning=loose
@@ -86,6 +90,7 @@ RUN apk update && apk add --no-cache \
     "iperf3=${IPERF3_VERSION}" \
     "iproute2=${IPROUTE2_VERSION}" \
     "iputils=${IPUTILS_VERSION}" \
+    "jq=${JQ_VERSION}" \
     "less=${LESS_VERSION}" \
     "man-db=${MAN_DB_VERSION}" \
     "man-pages=${MAN_PAGES_VERSION}" \
@@ -99,6 +104,7 @@ RUN apk update && apk add --no-cache \
     "tree=${TREE_VERSION}" \
     "vnstat=${VNSTAT_VERSION}" \
     "wget=${WGET_VERSION}" \
+    "yq-go=${YQ_GO_VERSION}" \
     "zsh=${ZSH_VERSION}" \
     "zsh-completions=${ZSH_COMPLETIONS_VERSION}" \
   && chmod +x /usr/local/bin/entrypoint.sh
