@@ -53,7 +53,7 @@ ENV NEOVIM_VERSION="0.12.2-r0"
 # renovate: datasource=repology depName=alpine_3_24/nmap versioning=loose
 ENV NMAP_VERSION="7.99-r0"
 # renovate: datasource=repology depName=alpine_3_24/python3 versioning=loose
-ENV PYTHON3_VERSION="3.14.5-r0"
+ENV PYTHON3_VERSION="3.14.7-r0"
 # renovate: datasource=repology depName=alpine_3_24/pstree versioning=loose
 ENV PSTREE_VERSION="2.40-r2"
 # renovate: datasource=repology depName=alpine_3_24/tcpdump versioning=loose
