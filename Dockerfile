@@ -25,7 +25,7 @@ ENV ETHTOOL_VERSION="7.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/grml-zsh-config versioning=loose
 ENV GRML_ZSH_CONFIG_VERSION="0.19.10-r0"
 # renovate: datasource=repology depName=alpine_3_24/htop versioning=loose
-ENV HTOP_VERSION="3.5.1-r1"
+ENV HTOP_VERSION="3.5.3-r0"
 # renovate: datasource=repology depName=alpine_3_24/iftop versioning=loose
 ENV IFTOP_VERSION="1.0_pre4-r0"
 # renovate: datasource=repology depName=alpine_3_24/inxi versioning=loose
@@ -59,7 +59,7 @@ ENV PSTREE_VERSION="2.40-r2"
 # renovate: datasource=repology depName=alpine_3_24/tcpdump versioning=loose
 ENV TCPDUMP_VERSION="4.99.6-r1"
 # renovate: datasource=repology depName=alpine_3_24/tmux versioning=loose
-ENV TMUX_VERSION="3.6b-r0"
+ENV TMUX_VERSION="3.7c-r0"
 # renovate: datasource=repology depName=alpine_3_24/tree versioning=loose
 ENV TREE_VERSION="2.3.2-r0"
 # renovate: datasource=repology depName=alpine_3_24/vnstat versioning=loose
