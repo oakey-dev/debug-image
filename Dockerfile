@@ -4,7 +4,7 @@ FROM alpine:3.24.1
 LABEL org.opencontainers.image.source=https://github.com/oakey-dev/debug-image
 
 # Copy entrypoint script into the image
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --chmod=755 entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # renovate: datasource=repology depName=alpine_3_24/atop versioning=loose
 ENV ATOP_VERSION="2.12.1-r0"
@@ -106,7 +106,6 @@ RUN apk update && apk add --no-cache \
     "wget=${WGET_VERSION}" \
     "yq-go=${YQ_GO_VERSION}" \
     "zsh=${ZSH_VERSION}" \
-    "zsh-completions=${ZSH_COMPLETIONS_VERSION}" \
-  && chmod +x /usr/local/bin/entrypoint.sh
+    "zsh-completions=${ZSH_COMPLETIONS_VERSION}"
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
