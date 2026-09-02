@@ -39,7 +39,7 @@ ENV IPROUTE2_VERSION="7.0.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/iputils versioning=loose
 ENV IPUTILS_VERSION="20250605-r2"
 # renovate: datasource=repology depName=alpine_3_24/jq versioning=loose
-ENV JQ_VERSION="1.8.1-r0"
+ENV JQ_VERSION="1.8.2-r0"
 # renovate: datasource=repology depName=alpine_3_24/less versioning=loose
 ENV LESS_VERSION="702-r0"
 # renovate: datasource=repology depName=alpine_3_24/mtr versioning=loose
