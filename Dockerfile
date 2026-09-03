@@ -19,7 +19,7 @@ ENV BTOP_VERSION="1.4.6-r0"
 # renovate: datasource=repology depName=alpine_3_24/ca-certificates versioning=loose
 ENV CA_CERTIFICATES_VERSION="20260611-r0"
 # renovate: datasource=repology depName=alpine_3_24/curl versioning=loose
-ENV CURL_VERSION="8.21.0-r0"
+ENV CURL_VERSION="8.22.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/ethtool versioning=loose
 ENV ETHTOOL_VERSION="7.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/grml-zsh-config versioning=loose
