@@ -13,7 +13,7 @@ ENV BASH_VERSION="5.3.9-r1"
 # renovate: datasource=repology depName=alpine_3_24/bash-completion versioning=loose
 ENV BASH_COMPLETION_VERSION="2.17.0-r1"
 # renovate: datasource=repology depName=alpine_3_24/bind-tools versioning=loose
-ENV BIND_TOOLS_VERSION="9.20.26-r0"
+ENV BIND_TOOLS_VERSION="9.20.27-r0"
 # renovate: datasource=repology depName=alpine_3_24/btop versioning=loose
 ENV BTOP_VERSION="1.4.6-r0"
 # renovate: datasource=repology depName=alpine_3_24/ca-certificates versioning=loose
