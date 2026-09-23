@@ -17,7 +17,7 @@ ENV BIND_TOOLS_VERSION="9.20.27-r0"
 # renovate: datasource=repology depName=alpine_3_24/btop versioning=loose
 ENV BTOP_VERSION="1.4.6-r0"
 # renovate: datasource=repology depName=alpine_3_24/ca-certificates versioning=loose
-ENV CA_CERTIFICATES_VERSION="20260611-r0"
+ENV CA_CERTIFICATES_VERSION="20260909-r0"
 # renovate: datasource=repology depName=alpine_3_24/curl versioning=loose
 ENV CURL_VERSION="8.22.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/ethtool versioning=loose
