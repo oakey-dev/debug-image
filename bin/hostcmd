@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+if [[ -z "${HOST_PATH:-}" ]] && [[ -d /host/opt/bin ]]; then
+    HOST_PATH="/opt/bin:$PATH"
+fi
+PATH="${HOST_PATH:-$PATH}"
+export PATH
+
+cmd="$(basename "$0")"
+if [[ "${cmd}" != "hostcmd" ]]; then
+    exec nsenter --target 1 --mount "${cmd}" "$@"
+else
+    exec nsenter --target 1 --mount "$@"
+fi

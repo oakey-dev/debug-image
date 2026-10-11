@@ -1,0 +1,7 @@
+.kube
+.env*
+*.swp
+*.bak
+*.orig
+__pycache__/*
+*.pyc
