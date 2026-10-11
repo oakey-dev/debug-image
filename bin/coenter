@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import json
-from operator import add, ge
 import os
 import subprocess
 import sys
@@ -107,14 +106,6 @@ def parse_args() -> argparse.Namespace:
     ns = container_group.add_argument("namespace", choices=sorted(namespaces), type=str,
                                       **kargs, help="Namespace of the containers")
 
-
-    #kargs = {"action": PodAction}
-    ##if not argco:
-    ##    args = parser.parse_known_args()[0]
-    ##    if args.namespace:
-    ##        kargs = {"choices": _get_pods_for_namespace(args.namespace)}
-    #pod_arg = container_group.add_argument("pod", **kargs,
-    #                                       help="Pod of the containers")
     args = parser.parse_known_args()[0]
     po = None
     if args.namespace or argcomp:
@@ -139,14 +130,6 @@ def parse_args() -> argparse.Namespace:
                 kargs["default"] = list(kargs["choices"])[0]
         co = container_group.add_argument("container", type=str,
                                           **kargs, help="Container name")
-
-    #kargs = {"action": ContainerAction}
-    ##if not argco:
-    ##    args = parser.parse_known_args()[0]
-    ##    if args.namespace and args.pod:
-    ##        kargs = {"choices": _get_containers_for_pod(args.namespace, args.pod)}
-    #container_arg = container_group.add_argument("container", **kargs,
-    #                                              help="Container name")
 
     nsenter_group = parser.add_argument_group("Nsenter", "args for nsenter to use")
     nsenter_group.add_argument("--mount", action="store_true",
@@ -178,13 +161,6 @@ def parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
     if args.help_requested:
-        #pod_arg.choices = _get_pods_for_namespace(args.namespace)
-        #if args.pod:
-        #    container_arg.choices = _get_containers_for_pod(args.namespace, args.pod)
-        #    container_arg.nargs = "?"
-        #else:
-        #    pod_arg.nargs = "?"
-        #    container_arg.nargs = "?"
         parser.print_help()
         sys.exit(0)
 
@@ -243,7 +219,7 @@ def main():
     if not args.no_set_root:
         nsenter.append(f"--wd=/proc/{pid}/root")
         env["PWD"] = f"/proc/{pid}/root"
-    #print(f"Executing command: {' '.join(nsenter + args.command)}")
+
     os.execvpe(nsenter[0], nsenter + args.command, env)
 
 if __name__ == "__main__":
