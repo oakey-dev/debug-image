@@ -40,6 +40,32 @@ if [[ -n "${COMPLETION_COMMANDS_ADD-}" ]]; then
     COMPLETION_COMMANDS+=("${additional_completion_commands[@]}")
 fi
 
+function generate_completion_commands() {
+    cmd=${1:?Missing command argument}
+    file=${2:?Missing file argument}
+    shell=${3:?Missing shell argument}
+    if [ ! -f "$file" ]; then
+        if [[ -f "/host$file" ]]; then
+            ln -sfn "/host$file" "$file"
+        elif [[ " ${COMPLETION_COMMANDS[*]} " =~  [[:space:]]"${cmd}"[[:space:]] ]]; then
+            comp=$("$cmd" completion "$shell" 2>/dev/null || true)
+            [[ -n "$comp" ]] && echo "$comp" > "$file"
+        fi
+    fi
+}
+
+function add_completion_command() {
+    cmd="${1:?Missing command argument}"
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "Info: Command '$cmd' not found, skipping completion setup" >&2
+        return
+    fi
+    zcomp="/usr/share/zsh/site-functions/_${cmd}"
+    generate_completion_commands "$cmd" "$zcomp" "zsh"
+    bcomp="/usr/share/bash-completion/completions/${cmd}"
+    generate_completion_commands "$cmd" "$bcomp" "bash"
+}
+
 old_ifs=$IFS
 IFS=:
 for file in "${files[@]}"; do
@@ -59,30 +85,15 @@ for file in "${files[@]}"; do
 
         if [[ -x "/host${path}/${file}" ]]; then
             ln -sfn hostcmd "/usr/local/bin/${file}"
-            # completions
-            zcomp="/usr/share/zsh/site-functions/_${file}"
-            if [[ ! -f "$zcomp" ]]; then
-                if [[ -f "/host$zcomp" ]]; then
-                    ln -sfn "/host$zcomp" "$zcomp"
-                elif [[ " ${COMPLETION_COMMANDS[*]} " =~  [[:space:]]"${file}"[[:space:]] ]]; then
-                    comp=$("$file" completion zsh 2>/dev/null || true)
-                    [[ -n "$comp" ]] && echo "$comp" > "$zcomp"
-                fi
-            fi
-            bcomp="/usr/share/bash-completion/completions/${file}"
-            if [[ ! -f "$bcomp" ]]; then
-                if [[ -f "/host$bcomp" ]]; then
-                    ln -sfn "/host$bcomp" "$bcomp"
-                elif [[ " ${COMPLETION_COMMANDS[*]} " =~  [[:space:]]"${file}"[[:space:]] ]]; then
-                    comp=$("$file" completion bash 2>/dev/null || true)
-                    [[ -n "$comp" ]] && echo "$comp" > "$bcomp"
-                fi
-            fi
             break
         fi
     done
 done
 IFS=$old_ifs
+
+for cmd in "${COMPLETION_COMMANDS[@]}"; do
+    add_completion_command "$cmd"
+done
 
 touch /tmp/debug-ready
 exec "$@"
