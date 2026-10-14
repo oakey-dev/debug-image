@@ -5,6 +5,7 @@ import logging
 import os
 import subprocess
 import sys
+from shutil import which
 try:
     import argcomplete # pyright: ignore[reportMissingImports]
 except ImportError:
@@ -13,8 +14,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 def check_dependency(command: str):
-    result = subprocess.run(["which", command], capture_output=True)
-    if result.returncode != 0:
+    if which(command) is None:
         logger.error(f"{command} is not installed")
         sys.exit(1)
 
@@ -26,15 +26,80 @@ class color:
 
 containers = {}
 
-def extract_container_data(container: dict) -> dict:
+def fetch_podman_data():
+    check_dependency("podman")
+
+    result = subprocess.run(["podman", "ps", "--format", "json"], capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.error("Failed to fetch Podman data")
+        logger.error(result.stderr)
+        sys.exit(1)
+    podman = json.loads(result.stdout)
+    global containers
+    containers = { (None, None, name): False for container in podman for name in container["Names"] }
+
+def fetch_docker_data():
+    check_dependency("docker")
+
+    result = subprocess.run(["docker", "ps", "--format", "{{json .}}"], capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.error("Failed to fetch Docker data")
+        logger.error(result.stderr)
+        sys.exit(1)
+    docker_containers = [json.loads(line) for line in result.stdout.splitlines()]
+    global containers
+    containers = { (None, None, container["Names"]): False for container in docker_containers }
+
+def parse_env(env_list: list[str]) -> dict[str, str]:
+    env = []
+    for item in env_list:
+        if "=" in item:
+            key, value = item.split("=", 1)
+            env.append({"key": key, "value": value})
+    return env
+
+def parse_mounts(mount_list: list[dict]) -> list[dict]:
+    return [ {"container_path": mount["Destination"],
+              "readonly": not mount["RW"]}
+                for mount in mount_list ]
+
+def fetch_docker_container(name: str):
+    result = subprocess.run(["docker", "inspect", "--format", "json", name], capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.error(f"Failed to fetch Docker container data for {name}")
+        logger.error(result.stderr)
+        sys.exit(1)
+    data = json.loads(result.stdout)[0]
     return {
+        "id": data["Id"],
+        "pid": data["State"]["Pid"],
+        "env": parse_env(data["Config"]["Env"]),
+        "mount": parse_mounts(data["Mounts"]),
+    }
+
+def fetch_podman_container(name: str):
+    result = subprocess.run(["podman", "inspect", "--format", "json", name], capture_output=True, text=True)
+    if result.returncode != 0:
+        logger.error(f"Failed to fetch Podman container data for {name}")
+        logger.error(result.stderr)
+        sys.exit(1)
+    data = json.loads(result.stdout)[0]
+    return {
+        "id": data["Id"],
+        "pid": data["State"]["Pid"],
+        "env": parse_env(data["Config"]["Env"]),
+        "mount": parse_mounts(data["Mounts"]),
+    }
+
+def extract_cri_data(container: dict) -> dict:
+    return {
+        "id": container["status"]["id"],
+        "pid": container["info"]["pid"],
+        "env": container["info"]["config"]["envs"],
+        "mount": container["info"]["config"]["mounts"],
         "namespace": container["info"]["config"]["labels"]["io.kubernetes.pod.namespace"],
         "pod": container["info"]["config"]["labels"]["io.kubernetes.pod.name"],
         "container": container["info"]["config"]["labels"]["io.kubernetes.container.name"],
-        "env": container["info"]["config"]["envs"],
-        "mount": container["info"]["config"]["mounts"],
-        "pid": container["info"]["pid"],
-        "id": container["status"]["id"]
     }
 
 def fetch_cri_data():
@@ -43,25 +108,21 @@ def fetch_cri_data():
     result = subprocess.run(["crictl", "inspect", "--state", "running", "-o", "json"], capture_output=True, text=True)
     if result.returncode != 0:
         logger.error("Failed to fetch CRI data")
+        logger.error(result.stderr)
         sys.exit(1)
     cri = json.loads(result.stdout)
     global containers
     containers = {
         (container["info"]["config"]["labels"]["io.kubernetes.pod.namespace"],
          container["info"]["config"]["labels"]["io.kubernetes.pod.name"],
-         container["info"]["config"]["labels"]["io.kubernetes.container.name"]): extract_container_data(container)
+         container["info"]["config"]["labels"]["io.kubernetes.container.name"]): extract_cri_data(container)
                    for container in cri }
 
 def _get_pods_for_namespace(namespace: str) -> set[str]:
-    return { container_data["pod"]
-                for (ns, _, _), container_data in containers.items()
-                    if ns == namespace }
+    return { pod for ns, pod, _ in containers.keys() if ns == namespace }
 
 def _get_containers_for_pod(namespace: str, pod: str) -> set[str]:
-    return { container_data["container"]
-                for (ns, p, _), container_data in containers.items()
-                    if ns == namespace
-                       and p == pod }
+    return { name for ns, p, name in containers.keys() if ns == namespace and p == pod }
 
 class PodCompleter:
     def __call__(self, prefix: str, parsed_args: argparse.Namespace, **kwargs) -> list[str]:
@@ -72,8 +133,6 @@ class PodCompleter:
 
 class ContainerCompleter:
     def __call__(self, prefix: str, parsed_args: argparse.Namespace, **kwargs) -> list[str]:
-        if not getattr(parsed_args, 'namespace', None) or not getattr(parsed_args, 'pod', None):
-            return []
         containers = _get_containers_for_pod(parsed_args.namespace, parsed_args.pod)
         return [container for container in containers if container.startswith(prefix)]
 
@@ -97,6 +156,8 @@ def no_fail_parse_known_args(parser: argparse.ArgumentParser, argv: list[str]) -
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="jump into a container's namespace")
     parser.add_argument('--keep-env', action='append', default=KEEP_ENV_DEFAULT, help='Environment variables to keep')
+    cr = parser.add_argument('--container-runtime', choices=['k8s', 'docker', 'podman'], default=os.environ.get('CONTAINER_RUNTIME'),
+                        help='Specify the container runtime to use (default: autodetect)')
     exclusive_group = parser.add_mutually_exclusive_group()
     exclusive_group.add_argument('--debug', '-d', action='store_true', help='Enable debug mode')
     exclusive_group.add_argument('--quiet', '-q', action='store_true', help='Disable all non error output from this script')
@@ -116,30 +177,59 @@ def parse_args() -> argparse.Namespace:
         level = logging.DEBUG
     logging.basicConfig(level=level, format='%(levelname)s: %(message)s')
 
-    fetch_cri_data()
-    namespaces = { container["namespace"] for container in containers.values() }
+    if args.container_runtime is None:
+        logging.debug("Autodetecting container runtime...")
+        if which("crictl") is not None:
+            cr.default = "k8s"
+            args.container_runtime = "k8s"
+        elif which("podman") is not None:
+            cr.default = "podman"
+            args.container_runtime = "podman"
+        elif which("docker") is not None:
+            cr.default = "docker"
+            args.container_runtime = "docker"
+        else:
+            logging.error("No suitable container runtime found")
+            sys.exit(1)
+
     container_group = parser.add_argument_group("Container", "Specify the container to enter")
-    container_group.add_argument("namespace", choices=sorted(namespaces), type=str,
-                                 help="Namespace of the container")
+    ns = True
+    pod = True
+    if args.container_runtime == "k8s":
+        fetch_cri_data()
+        namespaces = { container["namespace"] for container in containers.values() }
+        container_group.add_argument("namespace", choices=sorted(namespaces), type=str,
+                                    help="Namespace of the container")
 
-    args = no_fail_parse_known_args(parser, argv)
-    ns = getattr(args, 'namespace', None)
-    kargs = {"choices": _get_pods_for_namespace(ns)} if ns else {}
-    container_group.add_argument("pod", type=str,
-                                 **kargs, help="Pod name") \
-        .completer = PodCompleter()
+        args = no_fail_parse_known_args(parser, argv)
+        ns = getattr(args, 'namespace', None)
+        kargs = {"choices": _get_pods_for_namespace(ns)} if ns else {}
+        container_group.add_argument("pod", type=str,
+                                    **kargs, help="Pod name") \
+            .completer = PodCompleter()
 
-    args = no_fail_parse_known_args(parser, argv)
-    pod = getattr(args, 'pod', None)
-    kargs = {}
-    if ns and pod:
-        kargs["choices"] = _get_containers_for_pod(ns, pod)
-        if len(kargs["choices"]) == 1:
-            kargs["nargs"] = "?"
-            kargs["default"] = list(kargs["choices"])[0]
-    container_group.add_argument("container", type=str,
-                                 **kargs, help="Container name in pod") \
-        .completer = ContainerCompleter()
+        args = no_fail_parse_known_args(parser, argv)
+        pod = getattr(args, 'pod', None)
+        kargs = {}
+        if ns and pod:
+            kargs["choices"] = _get_containers_for_pod(ns, pod)
+            if len(kargs["choices"]) == 1:
+                kargs["nargs"] = "?"
+                kargs["default"] = list(kargs["choices"])[0]
+        container_group.add_argument("container", type=str,
+                                    **kargs, help="Container name in pod") \
+            .completer = ContainerCompleter()
+    else:
+        if args.container_runtime == "podman":
+            fetch_podman_data()
+        else:
+            fetch_docker_data()
+
+        container_group.add_argument("--namespace", required=False, default=None, help=argparse.SUPPRESS)
+        container_group.add_argument("--pod", required=False, default=None, help=argparse.SUPPRESS)
+        container_group.add_argument("container", type=str, choices=_get_containers_for_pod(None, None),
+                                    help="Container name") \
+            .completer = ContainerCompleter()
 
     nsenter_group = parser.add_argument_group("Nsenter", "args for nsenter to use")
     nsenter_group.add_argument("--mount", action="store_true",
@@ -169,13 +259,19 @@ def parse_args() -> argparse.Namespace:
 def main():
     args = parse_args()
 
-    # fetch container data from cri based on args
-    container_data = containers.get((args.namespace, args.pod, args.container))
-    if container_data is False:
-        # FIXME: support docker / podman
-        pass
-    elif container_data is None:
-        logger.error("Container not found, this should not happen")
+    name = args.container
+    if args.container_runtime == "k8s":
+        name = f"{args.namespace}/{args.pod}/{args.container}"
+        container_data = containers.get((args.namespace, args.pod, args.container))
+        if container_data is None:
+            logger.error("Container not found, this should not happen")
+            sys.exit(1)
+    elif args.container_runtime == "podman":
+        container_data = fetch_podman_container(args.container)
+    elif args.container_runtime == "docker":
+        container_data = fetch_docker_container(args.container)
+    else:
+        logger.error(f"Unsupported container runtime: {args.container_runtime}")
         sys.exit(1)
 
     # set env from containter_data["env"]: (e.g. content [{"key":"foo", "value": "bar"}])
@@ -212,7 +308,7 @@ def main():
         nsenter.append(f"--wd=/proc/{pid}/root")
         env["PWD"] = f"/proc/{pid}/root"
 
-    logger.info(f"Entering container {args.namespace}/{args.pod}/{args.container} with PID {pid}; ID {container_data['id']}")
+    logger.info(f"Entering container {name} with PID {pid}; ID {container_data['id']}")
     logger.debug(f"NSEnter command used (without env): {' '.join(nsenter + args.command)}")
     os.execvpe(nsenter[0], nsenter + args.command, env)
 
