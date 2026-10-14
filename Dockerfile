@@ -60,7 +60,7 @@ ENV MAN_DB_VERSION="2.13.1-r1"
 # renovate: datasource=repology depName=alpine_3_24/man-pages versioning=loose
 ENV MAN_PAGES_VERSION="6.18-r0"
 # renovate: datasource=repology depName=alpine_3_24/vim versioning=loose
-ENV VIM_VERSION="9.2.1091-r0"
+ENV VIM_VERSION="9.2.1178-r0"
 # renovate: datasource=repology depName=alpine_3_24/nmap versioning=loose
 ENV NMAP_VERSION="7.99-r0"
 # renovate: datasource=repology depName=alpine_3_24/pstree versioning=loose
