@@ -25,6 +25,16 @@ cri = {}
 cache_pods = {}
 cache_containers = {}
 
+def fetch_cri_data():
+    check_dependency("crictl")
+
+    global cri
+    result = subprocess.run(["crictl", "inspect", "--state", "running", "-o", "json"], capture_output=True, text=True)
+    if result.returncode != 0:
+        print("Error: Failed to fetch CRI data", file=sys.stderr)
+        sys.exit(1)
+    cri = json.loads(result.stdout)
+
 def _get_pods_for_namespace(namespace: str) -> set[str]:
     if namespace in cache_pods:
         return cache_pods[namespace]
@@ -49,122 +59,93 @@ def _get_containers_for_pod(namespace: str, pod: str) -> set[str]:
 
 class PodCompleter:
     def __call__(self, prefix: str, parsed_args: argparse.Namespace, **kwargs) -> list[str]:
-        if not hasattr(parsed_args, 'namespace') or parsed_args.namespace is None:
+        if not getattr(parsed_args, 'namespace', None):
             return []
         pods = _get_pods_for_namespace(parsed_args.namespace)
         return [pod for pod in pods if pod.startswith(prefix)]
 
 class ContainerCompleter:
     def __call__(self, prefix: str, parsed_args: argparse.Namespace, **kwargs) -> list[str]:
-        if not hasattr(parsed_args, 'namespace') or parsed_args.namespace is None:
-            return []
-        if not hasattr(parsed_args, 'pod') or parsed_args.pod is None:
+        if not getattr(parsed_args, 'namespace', None) or not getattr(parsed_args, 'pod', None):
             return []
         containers = _get_containers_for_pod(parsed_args.namespace, parsed_args.pod)
         return [container for container in containers if container.startswith(prefix)]
 
-class PodAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        ns = getattr(namespace, 'namespace', None)
-        if ns is None:
-            raise argparse.ArgumentError(self, f"Namespace must be specified before pod")
-        pods = _get_pods_for_namespace(ns)
-        self.choices = pods
-        if values not in pods:
-            raise argparse.ArgumentError(self, f"Invalid pod '{values}' for namespace '{ns}'. Valid pods: {', '.join(sorted(pods))}")
-        setattr(namespace, self.dest, values)
 
-class ContainerAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
-        ns = getattr(namespace, 'namespace', None)
-        pod = getattr(namespace, 'pod', None)
-        if ns is None:
-            raise argparse.ArgumentError(self, f"Namespace must be specified before container")
-        if pod is None:
-            raise argparse.ArgumentError(self, f"Pod must be specified before container")
-        containers = _get_containers_for_pod(ns, pod)
-        self.choices = containers
-        if values not in containers:
-            raise argparse.ArgumentError(self, f"Invalid container '{values}' for pod '{pod}'. Valid containers: {', '.join(sorted(containers))}")
-        setattr(namespace, self.dest, values)
+def no_fail_parse_known_args(parser: argparse.ArgumentParser, argv: list[str]) -> argparse.Namespace:
+    """Parse known arguments without failing on required arguments."""
+    required_actions = [
+        actions for actions in parser._actions if actions.required
+    ]
+    for action in required_actions:
+        action.required = False
+
+    args = parser.parse_known_args(argv)[0]
+
+    for action in required_actions:
+        action.required = True
+
+    return args
+
 
 def parse_args() -> argparse.Namespace:
-    namespaces = { container["info"]["config"]["labels"]["io.kubernetes.pod.namespace"] for container in cri }
-
-    parser = argparse.ArgumentParser(description="jump into a container's namespace", add_help=False)
-
-    parser.add_argument('-h', '--help', action='store_true', help='Show the help message and exit', dest='help_requested')
+    parser = argparse.ArgumentParser(description="jump into a container's namespace")
     parser.add_argument('--keep-env', action='append', default=KEEP_ENV_DEFAULT, help='Environment variables to keep')
 
+    # for initialisation processing we need process only the arguments before "--" without -h/--help
+    argv = sys.argv[1:]
+    if "--" in argv:
+        argv = argv[:argv.index("--")]
+    argv = [arg for arg in argv if arg not in ('-h', '--help')]
+
+    fetch_cri_data()
+    namespaces = { container["info"]["config"]["labels"]["io.kubernetes.pod.namespace"] for container in cri }
     container_group = parser.add_argument_group("Container", "Specify the container to enter")
+    container_group.add_argument("namespace", choices=sorted(namespaces), type=str,
+                                 help="Namespace of the container")
 
-    args = parser.parse_known_args()[0]
+    args = no_fail_parse_known_args(parser, argv)
+    ns = getattr(args, 'namespace', None)
+    kargs = {"choices": _get_pods_for_namespace(ns)} if ns else {}
+    container_group.add_argument("pod", type=str,
+                                 **kargs, help="Pod name") \
+        .completer = PodCompleter()
 
-    argcomp = os.environ.get("_ARGCOMPLETE", False) == "1"
-    help = args.help_requested or argcomp
-    kargs = {} if not help else {"nargs": "?"}
-    ns = container_group.add_argument("namespace", choices=sorted(namespaces), type=str,
-                                      **kargs, help="Namespace of the containers")
-
-    args = parser.parse_known_args()[0]
-    po = None
-    if args.namespace or argcomp:
-        if ns.nargs:
-            ns.nargs=None
-        kargs = {} if not help else {"nargs": "?"}
-        if not argcomp:
-            kargs["choices"] = _get_pods_for_namespace(args.namespace)
-        po = container_group.add_argument("pod", type=str,
-                                          **kargs, help="Pod of the containers")
-
-    args = parser.parse_known_args()[0]
-    co = None
-    if (args.namespace and getattr(args, 'pod', None)) or argcomp:
-        if po.nargs:
-            po.nargs=None
-        kargs = {} if not help else {"nargs": "?"}
-        if not argcomp:
-            kargs["choices"] = _get_containers_for_pod(args.namespace, args.pod)
-            if len(kargs["choices"]) == 1:
-                kargs["nargs"] = "?"
-                kargs["default"] = list(kargs["choices"])[0]
-        co = container_group.add_argument("container", type=str,
-                                          **kargs, help="Container name")
+    args = no_fail_parse_known_args(parser, argv)
+    pod = getattr(args, 'pod', None)
+    kargs = {}
+    if ns and pod:
+        kargs["choices"] = _get_containers_for_pod(ns, pod)
+        if len(kargs["choices"]) == 1:
+            kargs["nargs"] = "?"
+            kargs["default"] = list(kargs["choices"])[0]
+    container_group.add_argument("container", type=str,
+                                 **kargs, help="Container name in pod") \
+        .completer = ContainerCompleter()
 
     nsenter_group = parser.add_argument_group("Nsenter", "args for nsenter to use")
     nsenter_group.add_argument("--mount", action="store_true",
                                help="Enter the mount namespace")
     nsenter_group.add_argument("--no-uts", action="store_true",
-                               help="Enter the UTS namespace")
+                               help="Do not enter the UTS namespace")
     nsenter_group.add_argument("--ipc", action="store_true",
                                help="Enter the IPC namespace")
     nsenter_group.add_argument("--no-net", action="store_true",
-                               help="Enter the network namespace")
+                               help="Do not enter the network namespace")
     nsenter_group.add_argument("--pid", action="store_true",
                                help="Enter the PID namespace")
     nsenter_group.add_argument("--no-set-root", action="store_true",
-                               help="cd into the root directory of the target namespace")
+                               help="Do not change into the root directory of the target namespace")
 
-    args = parser.parse_known_args()[0]
-    if getattr(args, "namespace", None) and getattr(args, "pod", None) and getattr(args, "container", None):
+    args = no_fail_parse_known_args(parser, argv)
+    if (ns and pod and getattr(args, "container", None)) or help:
         parser.add_argument("command", nargs="*", default=[os.environ.get("SHELL", "/bin/bash")],
                             help="Command to execute inside the container, if not specified, defaults to an interactive shell")
 
     if argcomplete:
-        if po:
-            po.action = PodAction
-            po.completer = PodCompleter()
-        if co:
-            co.action = ContainerAction
-            co.completer = ContainerCompleter()
         argcomplete.autocomplete(parser)
 
-    args = parser.parse_args()
-    if args.help_requested:
-        parser.print_help()
-        sys.exit(0)
-
-    return args
+    return parser.parse_args()
 
 def fetch_container_data(args: argparse.Namespace) -> dict:
     return next(
@@ -176,20 +157,17 @@ def fetch_container_data(args: argparse.Namespace) -> dict:
     )
 
 def main():
-    check_dependency("crictl")
-
-    global cri
-    cri = json.loads(subprocess.run(["crictl", "inspect", "-a", "--state", "running", "-o", "json"], capture_output=True, text=True).stdout)
     args = parse_args()
 
     # fetch container data from cri based on args
     container_data = fetch_container_data(args)
     if container_data is None:
-        print("Error: Container not found", file=sys.stderr)
+        print("Error: Container not found, this should not happen", file=sys.stderr)
         sys.exit(1)
 
     # set env from containter_data["info"]["config"]["envs"]: (e.g. content [{"key":"foo", "value": "bar"}])
     env = { item["key"]: item["value"] for item in container_data["info"]["config"]["envs"] }
+    print(f"Initial environment with {len(env)} variables")
     for e in args.keep_env:
         if e in os.environ:
             env[e] = os.environ[e]
@@ -199,9 +177,8 @@ def main():
         env["PS1"] = f"(debug) {os.environ.get('PS1', '\\u@\\h \\w \\$ ')}"
 
     # list mount points from container_data["info"]["config"]["mounts"]
-    mounts = { f"{f'  (ro) {color.GRAY}' if item.get('readonly') else '       '}{item['container_path']}{color.RESET}" for item in container_data["info"]["config"]["mounts"] }
+    mounts = { f"{f'  (ro) {color.GRAY}' if item.get('readonly') else '       '}{item['container_path'][1:]}{color.RESET}" for item in container_data["info"]["config"]["mounts"] }
     pid = container_data["info"]["pid"]
-    print(f"Entering container {args.namespace}/{args.pod}/{args.container} with PID {pid}; ID {container_data['status']['id']}")
     print(f"Mount points:\n{'\n'.join(sorted(mounts))}")
 
     # open shell using nsenter with the environment variables set
@@ -220,6 +197,7 @@ def main():
         nsenter.append(f"--wd=/proc/{pid}/root")
         env["PWD"] = f"/proc/{pid}/root"
 
+    print(f"Entering container {args.namespace}/{args.pod}/{args.container} with PID {pid}; ID {container_data['status']['id']}")
     os.execvpe(nsenter[0], nsenter + args.command, env)
 
 if __name__ == "__main__":
