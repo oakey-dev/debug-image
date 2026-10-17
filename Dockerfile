@@ -50,7 +50,7 @@ ENV IPUTILS_VERSION="20250605-r2"
 # renovate: datasource=repology depName=alpine_3_24/jq versioning=loose
 ENV JQ_VERSION="1.8.2-r0"
 # renovate: datasource=repology depName=alpine_3_24/kubectl versioning=loose
-ENV KUBECTL_VERSION="1.36.1-r1"
+ENV KUBECTL_VERSION="1.36.1-r2"
 # renovate: datasource=repology depName=alpine_3_24/less versioning=loose
 ENV LESS_VERSION="702-r0"
 # renovate: datasource=repology depName=alpine_3_24/mtr versioning=loose
@@ -60,7 +60,7 @@ ENV MAN_DB_VERSION="2.13.1-r1"
 # renovate: datasource=repology depName=alpine_3_24/man-pages versioning=loose
 ENV MAN_PAGES_VERSION="6.18-r0"
 # renovate: datasource=repology depName=alpine_3_24/vim versioning=loose
-ENV VIM_VERSION="9.2.1178-r0"
+ENV VIM_VERSION="9.2.1202-r0"
 # renovate: datasource=repology depName=alpine_3_24/nmap versioning=loose
 ENV NMAP_VERSION="7.99-r0"
 # renovate: datasource=repology depName=alpine_3_24/pstree versioning=loose
@@ -82,7 +82,7 @@ ENV VNSTAT_VERSION="2.13-r1"
 # renovate: datasource=repology depName=alpine_3_24/wget versioning=loose
 ENV WGET_VERSION="1.25.0-r3"
 # renovate: datasource=repology depName=alpine_3_24/yq-go versioning=loose
-ENV YQ_GO_VERSION="4.53.3-r1"
+ENV YQ_GO_VERSION="4.53.3-r2"
 # renovate: datasource=repology depName=alpine_3_24/zsh-completions versioning=loose
 ENV ZSH_COMPLETIONS_VERSION="0.35.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/zsh versioning=loose
