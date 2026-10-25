@@ -1,4 +1,4 @@
-FROM alpine:3.24.2
+FROM alpine:3.24.3
 
 # Add this label to your Dockerfile
 LABEL org.opencontainers.image.source=https://github.com/oakey-dev/debug-image
