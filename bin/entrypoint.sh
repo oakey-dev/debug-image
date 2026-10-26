@@ -50,7 +50,7 @@ function generate_completion_commands() {
             ln -sfn "/host$file" "$file"
         elif [[ " ${COMPLETION_COMMANDS[*]} " =~  [[:space:]]"${cmd}"[[:space:]] ]]; then
             comp=$("$cmd" completion "$shell" 2>/dev/null || true)
-            [[ -n "$comp" ]] && echo "$comp" > "$file"
+            [[ -z "$comp" ]] || echo "$comp" > "$file"
         fi
     fi
 }
@@ -97,4 +97,5 @@ for cmd in "${COMPLETION_COMMANDS[@]}"; do
 done
 
 touch /tmp/debug-ready
+echo "... done, now running: $*"
 exec "$@"
