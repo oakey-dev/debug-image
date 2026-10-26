@@ -13,6 +13,7 @@ shopt -s nullglob
 default_files=(
     {arp,ip,ip6,eb}tables{,-save}
     {boot,cri,hostname,journal,kube,network,numa,resolve,sys,system,timedate,update,wd}ctl
+    ctr
     {dep,ls,rm}mod
     mod{probe,info}
     efibootmgr
@@ -34,7 +35,7 @@ if [[ -n "${HOST_COMMANDS_ADD-}" ]]; then
     files+=("${additional_files[@]}")
 fi
 
-COMPLETION_COMMANDS=("crictl" "kubectl" "k3s")
+COMPLETION_COMMANDS=("crictl" "ctr" "kubectl" "k3s")
 if [[ -n "${COMPLETION_COMMANDS_ADD-}" ]]; then
     read -r -a additional_completion_commands <<< "$COMPLETION_COMMANDS_ADD"
     COMPLETION_COMMANDS+=("${additional_completion_commands[@]}")

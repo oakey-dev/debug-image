@@ -26,6 +26,13 @@ class color:
 
 containers = {}
 
+def fetch_key(labels: dict, fallback: str = None) -> tuple[str|None, str|None, str]:
+    return (
+        labels.get('io.kubernetes.pod.namespace'),
+        labels.get('io.kubernetes.pod.name'),
+        labels.get('io.kubernetes.container.name', fallback),
+    )
+
 def fetch_podman_data():
     check_dependency("podman")
 
@@ -36,9 +43,33 @@ def fetch_podman_data():
         sys.exit(1)
     podman = json.loads(result.stdout)
     global containers
-    containers = { (None, None, name): False for container in podman for name in container["Names"] }
+    containers = { fetch_key(container["Labels"], name): False for container in podman for name in container["Names"] }
 
 def fetch_docker_data():
+    global containers
+    labels = {}
+    try:
+        import docker # pyright: ignore[reportMissingModuleSource]
+
+        client = docker.from_env()
+
+        containers = {}
+        for container in client.containers.list(all=True):
+            ns, pod, container_name = fetch_key(container.labels, container.name)
+            labels[container.name] = container.labels
+            containers[(ns, pod, container_name)] = {
+                "id": container.id,
+                "pid": container.attrs["State"]["Pid"],
+                "env": parse_env(container.attrs["Config"]["Env"]),
+                "mount": parse_mounts(container.attrs["Mounts"]),
+                "namespace": ns,
+                "pod": pod,
+                "container": container_name
+            }
+        return
+    except ImportError:
+        pass
+
     check_dependency("docker")
 
     result = subprocess.run(["docker", "ps", "--format", "{{json .}}"], capture_output=True, text=True)
@@ -47,8 +78,27 @@ def fetch_docker_data():
         logger.error(result.stderr)
         sys.exit(1)
     docker_containers = [json.loads(line) for line in result.stdout.splitlines()]
-    global containers
-    containers = { (None, None, container["Names"]): False for container in docker_containers }
+    containers = { fetch_key(parse_labels(container["Labels"]), container["Names"]): False for container in docker_containers }
+
+def parse_labels(labels: str) -> dict[str, str]:
+    # convert a string of labels in the format "key=value" to a dictionary, considering that value may contain , characters, but key cannot contain , characters
+    result = {}
+    items = labels.split(",")
+    last_key = None
+    for item in items:
+        if "=" in item:
+            key, value = item.split("=", 1)
+            if ',' in key:
+                old_value, key = key.rsplit(",", 1)
+                result[last_key] += "," + old_value
+            elif " " in key:
+                result[last_key] += item
+                continue
+            result[key] = value
+            last_key = key
+        elif last_key is not None:
+            result[last_key] += "," + item
+    return result
 
 def parse_env(env_list: list[str]) -> dict[str, str]:
     env = []
@@ -75,6 +125,9 @@ def fetch_docker_container(name: str):
         "pid": data["State"]["Pid"],
         "env": parse_env(data["Config"]["Env"]),
         "mount": parse_mounts(data["Mounts"]),
+        "namespace": None,
+        "pod": None,
+        "container": name,
     }
 
 def fetch_podman_container(name: str):
@@ -89,9 +142,12 @@ def fetch_podman_container(name: str):
         "pid": data["State"]["Pid"],
         "env": parse_env(data["Config"]["Env"]),
         "mount": parse_mounts(data["Mounts"]),
+        "namespace": None,
+        "pod": None,
+        "container": name,
     }
 
-def extract_cri_data(container: dict) -> dict:
+def extract_k8s_data(container: dict) -> dict:
     return {
         "id": container["status"]["id"],
         "pid": container["info"]["pid"],
@@ -113,9 +169,7 @@ def fetch_cri_data():
     cri = json.loads(result.stdout)
     global containers
     containers = {
-        (container["info"]["config"]["labels"]["io.kubernetes.pod.namespace"],
-         container["info"]["config"]["labels"]["io.kubernetes.pod.name"],
-         container["info"]["config"]["labels"]["io.kubernetes.container.name"]): extract_cri_data(container)
+         fetch_key(container["info"]["config"]["labels"]): extract_k8s_data(container)
                    for container in cri }
 
 def _get_pods_for_namespace(namespace: str) -> set[str]:
@@ -180,8 +234,8 @@ def parse_args() -> argparse.Namespace:
     if args.container_runtime is None:
         logging.debug("Autodetecting container runtime...")
         if which("crictl") is not None:
-            cr.default = "k8s"
-            args.container_runtime = "k8s"
+            cr.default = "cri"
+            args.container_runtime = "cri"
         elif which("podman") is not None:
             cr.default = "podman"
             args.container_runtime = "podman"
@@ -195,7 +249,7 @@ def parse_args() -> argparse.Namespace:
     container_group = parser.add_argument_group("Container", "Specify the container to enter")
     ns = True
     pod = True
-    if args.container_runtime == "k8s":
+    if args.container_runtime == "cri":
         fetch_cri_data()
         namespaces = { container["namespace"] for container in containers.values() }
         container_group.add_argument("namespace", choices=sorted(namespaces), type=str,
@@ -260,7 +314,7 @@ def main():
     args = parse_args()
 
     name = args.container
-    if args.container_runtime == "k8s":
+    if args.container_runtime == "cri":
         name = f"{args.namespace}/{args.pod}/{args.container}"
         container_data = containers.get((args.namespace, args.pod, args.container))
         if container_data is None:
