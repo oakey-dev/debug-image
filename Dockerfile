@@ -68,7 +68,7 @@ ENV PSTREE_VERSION="2.40-r2"
 # renovate: datasource=repology depName=alpine_3_24/py3-argcomplete versioning=loose
 ENV PY3_ARGCOMPLETE_VERSION="3.6.3-r1"
 # renovate: datasource=repology depName=alpine_3_24/python3 versioning=loose
-ENV PYTHON3_VERSION="3.14.8-r0"
+ENV PYTHON3_VERSION="3.14.10-r1"
 # renovate: datasource=repology depName=alpine_3_24/rsync versioning=loose
 ENV RSYNC_VERSION="3.5.0-r0"
 # renovate: datasource=repology depName=alpine_3_24/tcpdump versioning=loose
