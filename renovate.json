@@ -10,6 +10,26 @@
       "separateMultipleMajor": false,
       "groupName": "alpine packages",
       "commitBodyTable": true
+    },
+    {
+      "matchDatasources": ["docker"],
+      "separateMultipleMinor": true,
+      "groupName": "alpine upgrade",
+      "pinDigests": false
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "separateMultipleMinor": true,
+      "groupName": "alpine upgrade",
+      "pinDigests": true
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["patch", "digest"],
+      "matchDatasources": ["docker"],
+      "groupName": "alpine packages",
+      "pinDigests": true
     }
   ],
   "customManagers": [
