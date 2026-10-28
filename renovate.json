@@ -6,58 +6,45 @@
   "abandonmentThreshold": "2 years",
   "packageRules": [
     {
-      "matchDatasources": ["repology"],
+      "matchDatasources": ["apk"],
       "separateMultipleMajor": false,
-      "groupName": "alpine packages",
-      "commitBodyTable": true
+      "groupName": "packages",
+      "commitBodyTable": true,
+      "registryUrls": [
+        "https://dl-cdn.alpinelinux.org/alpine?branch=v3.24&components=main,community&arch=x86_64"
+      ]
     },
     {
       "matchDatasources": ["docker"],
-      "separateMultipleMinor": true,
-      "groupName": "alpine upgrade",
-      "pinDigests": false
+      "separateMultipleMinor": true
     },
     {
       "matchManagers": ["dockerfile"],
       "matchDatasources": ["docker"],
       "separateMultipleMinor": true,
-      "groupName": "alpine upgrade",
       "pinDigests": true
     },
     {
       "matchManagers": ["dockerfile"],
       "matchUpdateTypes": ["patch", "digest"],
       "matchDatasources": ["docker"],
-      "groupName": "alpine packages",
+      "groupName": "packages",
       "pinDigests": true
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update 'ENV' and '# renovate' in Dockerfiles",
-      "fileMatch": [
-          "Dockerfile"
-      ],
+      "description": "Update Alpine registry URL branch",
+      "fileMatch": ["^renovate\\.json$"],
       "matchStrings": [
-          "# renovate: datasource=repology depName=alpine_(?<currentValue>\\d+[._]\\d+)"
+        "\"registryUrls\"\\s*:\\s*\\[\\s*\"https://dl-cdn\\.alpinelinux\\.org/alpine\\?branch=v(?<currentValue>\\d+\\.\\d+)&components=main,community&arch=x86_64\""
       ],
-      "currentValueTemplate": "{{{ replace '_' '.' currentValue }}}",
+      "currentValueTemplate": "{{{currentValue}}}",
       "datasourceTemplate": "docker",
       "depNameTemplate": "alpine",
-      "versioningTemplate": "regex:^(?<major>\\d+)[._](?<minor>\\d+)$",
-      "autoReplaceStringTemplate": "# renovate: datasource=repology depName=alpine_{{{newMajor}}}_{{{newMinor}}}"
-    },
-    {
-      "customType": "regex",
-      "description": "Update _VERSION variables in Dockerfiles",
-      "fileMatch": [
-          "Dockerfile"
-      ],
-      "matchStrings": [
-          "#\\s*renovate:\\s*datasource=(?<datasource>.*?) depName=(?<depName>.*?)( versioning=(?<versioning>.*?))?\\sENV .*?_VERSION=\"(?<currentValue>.*)\"\\s"
-      ],
-      "versioningTemplate": "{{#if versioning}}{{{versioning}}}{{else}}loose{{/if}}"
+      "versioningTemplate": "regex:^(?<major>\\d+)\\.(?<minor>\\d+)$",
+      "autoReplaceStringTemplate": "\"registryUrls\": [\n        \"https://dl-cdn.alpinelinux.org/alpine?branch=v{{{newMajor}}}.{{{newMinor}}}&components=main,community&arch=x86_64\""
     }
   ],
   "maxMajorIncrement": 0,
