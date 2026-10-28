@@ -81,8 +81,8 @@ for file in "${files[@]}"; do
         continue
     fi
     for path in $HOST_PATH; do
-        [[ -d "$path" ]] || continue
-        [[ ! -L "$path" ]] || continue
+        [[ -d "/host/$path" ]] || continue
+        [[ ! -L "/host/$path" ]] || continue
 
         if [[ -x "/host${path}/${file}" ]]; then
             ln -sfn hostcmd "/usr/local/bin/${file}"
