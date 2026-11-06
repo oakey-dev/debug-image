@@ -1,4 +1,4 @@
-FROM alpine:3.24.4@sha256:e2944c2947c8cabdd6b23a2ebcf8094a9f3d53ca9e0340edd065237ab74c18c0
+FROM alpine:3.24.4@sha256:93b41ef40b1677fce8fcc64ff4af09daddfacf5040afde618bc46c1e2d1cc7d4
 
 # Add this label to your Dockerfile
 LABEL org.opencontainers.image.source=https://github.com/oakey-dev/debug-image
@@ -67,8 +67,8 @@ RUN apk update && apk add --no-cache \
     "py3-argcomplete=3.6.3-r1" \
     "python3-doc=3.14.10-r1" \
     "python3=3.14.10-r1" \
-    "rsync-doc=3.5.0-r0" \
-    "rsync=3.5.0-r0" \
+    "rsync-doc=3.5.2-r0" \
+    "rsync=3.5.2-r0" \
     "tcpdump-doc=4.99.6-r1" \
     "tcpdump=4.99.6-r1" \
     "tmux-doc=3.7c-r0" \
