@@ -1,4 +1,4 @@
-FROM alpine:3.24.4@sha256:93b41ef40b1677fce8fcc64ff4af09daddfacf5040afde618bc46c1e2d1cc7d4
+FROM alpine:3.24.4@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf
 
 # Add this label to your Dockerfile
 LABEL org.opencontainers.image.source=https://github.com/oakey-dev/debug-image
@@ -57,9 +57,9 @@ RUN apk update && apk add --no-cache \
     "man-pages=6.18-r0" \
     "mtr-doc=0.96-r2" \
     "mtr=0.96-r2" \
-    "vim-common=9.2.1202-r0" \
-    "vim-doc=9.2.1202-r0" \
-    "vim=9.2.1202-r0" \
+    "vim-common=9.2.1352-r0" \
+    "vim-doc=9.2.1352-r0" \
+    "vim=9.2.1352-r0" \
     "nmap-doc=7.99-r0" \
     "nmap=7.99-r0" \
     "pstree-doc=2.40-r2" \
@@ -67,8 +67,8 @@ RUN apk update && apk add --no-cache \
     "py3-argcomplete=3.6.3-r1" \
     "python3-doc=3.14.10-r1" \
     "python3=3.14.10-r1" \
-    "rsync-doc=3.5.2-r0" \
-    "rsync=3.5.2-r0" \
+    "rsync-doc=3.5.2-r1" \
+    "rsync=3.5.2-r1" \
     "tcpdump-doc=4.99.6-r1" \
     "tcpdump=4.99.6-r1" \
     "tmux-doc=3.7c-r0" \
