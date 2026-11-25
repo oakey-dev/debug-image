@@ -65,8 +65,8 @@ RUN apk update && apk add --no-cache \
     "pstree-doc=2.40-r2" \
     "pstree=2.40-r2" \
     "py3-argcomplete=3.6.3-r1" \
-    "python3-doc=3.14.10-r1" \
-    "python3=3.14.10-r1" \
+    "python3-doc=3.14.10-r2" \
+    "python3=3.14.10-r2" \
     "rsync-doc=3.5.2-r1" \
     "rsync=3.5.2-r1" \
     "tcpdump-doc=4.99.6-r1" \
