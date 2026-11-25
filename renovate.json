@@ -12,7 +12,8 @@
       "commitBodyTable": true,
       "registryUrls": [
         "https://dl-cdn.alpinelinux.org/alpine?branch=v3.24&components=main,community&arch=x86_64"
-      ]
+      ],
+      "automerge": true
     },
     {
       "matchDatasources": ["docker"],
@@ -29,7 +30,8 @@
       "matchUpdateTypes": ["patch", "digest"],
       "matchDatasources": ["docker"],
       "groupName": "packages",
-      "pinDigests": true
+      "pinDigests": true,
+      "automerge": true
     }
   ],
   "customManagers": [
